@@ -166,3 +166,208 @@ source有一个简写形式，可以使用一个点（.）来表示。如`. ~/.b
 
 `alias`命令用来为一个命令指定别名，如`alias ll='ls -l'`。
 一般来说，都会把常用的别名写在~/.bashrc的末尾。unalias可以解除别名。
+
+`read`命令：
+
+```bash
+echo -n "Please input some text > "
+read text
+echo "Your input text：$text"
+```
+
+read可以接受用户输入的多个值：`read a b c`。
+
+read命令读取的值，默认是以空格分隔。可以通过自定义环境变量IFS（Internal Field Separator），修改分隔标志。
+
+## 条件判断
+
+`if`条件判断结构：
+
+```bash
+if commands; then
+  commands
+elif commands; then
+  commands...
+else
+  commands
+fi
+```
+
+if结构的判断条件，一般使用test命令，有三种形式：
+
+1. `test expression`
+2. `[ expression ]` (其实`[`也是一个特殊命令，这也是为什么`[`后面要有空格。)
+3. `[[ expression ]]` (第三种形式还支持正则判断)
+
+以下表达式用来判断文件状态：（具体见<https://wangdoc.com/bash/condition.html#%E6%96%87%E4%BB%B6%E5%88%A4%E6%96%AD>)
+
+- [ -a file ]：如果 file 存在，则为true。
+- [ -b file ]：如果 file 存在并且是一个块（设备）文件，则为true。
+- [ -c file ]：如果 file 存在并且是一个字符（设备）文件，则为true。
+- [ -d file ]：如果 file 存在并且是一个目录，则为true。
+- [ -e file ]：如果 file 存在，则为true。
+- [ -f file ]：如果 file 存在并且是一个普通文件，则为true。
+- ...
+
+以下表达式用来判断字符串：
+
+- [ string ]：如果string不为空（长度大于0），则判断为真。
+- [ -n string ]：如果字符串string的长度大于零，则判断为真。
+- [ -z string ]：如果字符串string的长度为零，则判断为真。
+- [ string1 = string2 ]：如果string1和string2相同，则判断为真。
+- [ string1 == string2 ] 等同于[ string1 = string2 ]。
+
+下面的表达式用于判断整数：
+
+- [ integer1 -eq integer2 ]：如果integer1等于integer2，则为true。
+- [ integer1 -ne integer2 ]：如果integer1不等于integer2，则为true。
+- [ integer1 -le integer2 ]：如果integer1小于或等于integer2，则为true。
+- [ integer1 -lt integer2 ]：如果integer1小于integer2，则为true。
+- [ integer1 -ge integer2 ]：如果integer1大于或等于integer2，则为true。
+- [ integer1 -gt integer2 ]：如果integer1大于integer2，则为true。
+
+Bash 还提供了((...))作为算术条件，进行算术运算的判断。
+
+`case`结构：
+
+```bash
+case expression in
+  pattern )
+    commands ;;
+  pattern )
+    commands ;;
+  ...
+esac
+```
+
+## 循环
+
+`while` 循环：
+
+```bash
+while condition; do
+  commands
+done
+```
+
+`until` 循环：与while循环恰好相反，只要不符合判断条件，就不断循环执行指定的语句。
+
+```bash
+until condition; do
+  commands
+done
+```
+
+`for...in`循环用于遍历列表的每一项：
+
+```bash
+for variable in list
+do
+  commands
+done
+```
+
+`for`循环还支持 C 语言的循环语法：
+
+```bash
+for (( expression1; expression2; expression3 )); do
+  commands
+done
+```
+
+## 函数
+
+Bash 函数定义的语法有两种：
+
+```bash
+fn() {
+  # codes
+}
+
+function fn() {
+  # codes
+}
+```
+
+Bash 函数体内直接声明的变量，属于全局变量，整个脚本都可以读取。这一点需要特别小心。函数里面可以用local命令声明局部变量。
+
+## 数组
+
+数组可以采用逐个赋值的方法创建：
+
+```bash
+array[0]=val
+array[1]=val
+```
+
+也可以采用一次性赋值的方式创建：
+
+```bash
+ARRAY=(
+  value1
+  value2
+  value3
+)
+```
+
+@和*是数组的特殊索引，表示返回数组的所有成员。
+
+数组长度：
+
+```bash
+${#array[*]}
+${#array[@]}
+```
+
+## set命令
+
+Bash 执行脚本时，会创建一个子 Shell。这个子 Shell 就是脚本的执行环境，Bash 默认给定了这个环境的各种参数。`set`命令用来修改子 Shell 环境的运行参数，即定制环境。
+
+- `set -u`：执行脚本时，如果遇到不存在的变量，Bash 默认忽略它。
+- `set -x` 用来在运行结果之前，先输出执行的那一行命令。
+- `set -e` 使得脚本只要发生错误，就终止执行。（如果脚本里面有运行失败的命令（返回值非0），Bash 默认会继续执行后面的命令。）
+- `set -o pipefail` set -e 有一个例外情况，就是不适用于管道命令。set -o pipefail用来解决这种情况，只要一个子命令失败，整个管道命令就失败，脚本就会终止执行。
+- ...
+
+set命令的几个参数，一般都放在一起使用，如：
+
+```bash
+set -euxo pipefail
+```
+
+## mktemp 命令
+
+Bash 脚本有时需要创建临时文件或临时目录。常见的做法是，在/tmp目录里面创建文件或目录，使用mktemp命令是最安全的做法，其支持唯一文件名和清除机制。
+
+直接运行mktemp命令，就能生成一个临时文件。
+
+- -d参数可以创建一个临时目录。
+- -p参数可以指定临时文件所在的目录。
+- -t参数可以指定临时文件的文件名模板。
+
+`trap`命令用来在 Bash 脚本中响应系统信号。
+
+`trap 'rm -f "$TMPFILE"' EXIT`命令中，脚本遇到EXIT信号时，就会执行`rm -f "$TMPFILE"`。
+
+## Session
+
+用户每次使用 Shell，都会开启一个与 Shell 的 Session。Session 有两种类型：登录 Session 和非登录 Session。
+
+**登录 Session** 一般进行整个系统环境的初始化，启动的初始化脚本依次如下：
+
+- /etc/profile：所有用户的全局配置脚本。
+- /etc/profile.d目录里面所有.sh文件
+- ~/.bash_profile：用户的个人配置脚本。如果该脚本存在，则执行完就不再往下执行。
+- ~/.bash_login：如果~/.bash_profile没找到，则尝试执行这个脚本（C shell 的初始化脚本）。如果该脚本存在，则执行完就不再往下执行。
+- ~/.profile：如果~/.bash_profile和~/.bash_login都没找到，则尝试读取这个脚本（Bourne shell 和 Korn shell 的初始化脚本）。
+
+**非登录 Session** 是用户进入系统以后，手动新建的 Session，这时不会进行环境初始化。比如，在命令行执行bash命令，就会新建一个非登录 Session。
+
+非登录 Session 的初始化脚本依次如下：
+
+- /etc/bash.bashrc：对全体用户有效。
+- ~/.bashrc：仅对当前用户有效。
+
+`~/.bashrc`通常是最重要的脚本。非登录 Session 默认会执行它，而登录 Session 一般也会通过`~/.bash_profile`调用执行它。
+
+`~/.bash_logout`脚本在每次退出 Session 时执行，通常用来做一些清理工作和记录工作，比如删除临时文件。
