@@ -171,7 +171,8 @@ printStackTrace() 能打印Throwable和其调用栈轨迹，调用栈显示了�
 
 **被检查的异常**会强制你在可能还没准备好处理错误的时候被迫加上catch语句。
 实际上，当在一个方法中调用其他方法时，不知道怎么处理一个异常，但也不想把它吞了，可以直接把被检查的异常包装进RuntimeException里，转换为不检查的异常。如下
-```
+
+```java
 catch (xxxCheckedException e) {
     throw new RuntimeException(e);
 }
@@ -186,6 +187,7 @@ String对象是不可变的。每一个看起来会修改String值的方法都�
 ## 14. 类型信息
 
 有两种方式让我们在运行时识别对象和类的信息：
+
 1. RTTI
 2. 反射机制
 
@@ -194,6 +196,7 @@ Java使用Class对象来执行其RTTI。每个类都有一个Class对象。
 所有的类都是在对其第一次使用时，动态加载到JVM中。当程序创建第一个对类的静态成员的引用时，就会加载这个类（构造器是类的静态方法）。
 
 已知的RTTI形式：
+
 - 传统的类型转换
 - 代表对象的类型的Class对象
 - instance of，告诉对象是不是某个特定类型的实例
@@ -219,3 +222,13 @@ Class类与java.lang.reflect类库一起对反射进行了支持。
 
 在单核上运行并发程序开销更大，因为增加了所谓上下文切换的代价。
 但如果有任务出现阻塞，并发能够使程序中其他任务继续执行。
+
+定义任务可以由`Runnable`接口来提供，只需实现Runnable并编写`run()`方法。
+通常将Runnable对象提交给一个`Thread`构造器。调用Thread对象的`start()`方法会为该线程执行必需的初始化操作，然后调用Runnable的run()方法。
+
+java.util.concurrent包中的`Executor`将为你管理Thread对象，从而简化并发编程。
+
+Runnable是执行工作的独立任务，但它不返回任何值。如果希望在任务完成时能返回一个值，可以使用`Callable`接口。
+`Callable<T>`是一种具有类型参数的泛型，它的类型参数表示的是从方法`call()`中返回的值，并且必须使用`ExecutorService.submit()`方法调用它。
+
+sumit()方法会产生`Future`对象，可以调用`isDone()`方法来查询Future是否完成，调用`get()`方法来获取该结果。
